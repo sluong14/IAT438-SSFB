@@ -11,6 +11,7 @@ export type Artist = {
   stageId: string;
   name: string;
   time: string;
+  endTime?: string;
   coverImage: string;
   bio: string;
   isLive: boolean;
