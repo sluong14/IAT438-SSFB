@@ -1,0 +1,82 @@
+import type { Artist, Track } from '@/types';
+
+export const artists: Artist[] = [
+  {
+    id: 'sign-libra',
+    stageId: 'stage-a',
+    name: 'SIGN LIBRA',
+    time: '12:00PM',
+    coverImage: '',
+    bio: 'Sign Libra is an experimental electronic artist known for boundary-dissolving sonic sculptures and deeply immersive live performances.',
+    isLive: true,
+  },
+  {
+    id: 'tala-drum-corps',
+    stageId: 'stage-a',
+    name: 'TALA DRUM CORPS',
+    time: '1:00PM',
+    coverImage: '',
+    bio: 'Tala Drum Corps is a collective of percussionists drawing from South Asian classical traditions and contemporary rhythmic experimentation.',
+    isLive: false,
+  },
+  {
+    id: 'lulu-matahan',
+    stageId: 'stage-a',
+    name: 'LULU & MATAHAN',
+    time: '2:30PM',
+    coverImage: '',
+    bio: 'Lulu & Matahan blend folk melodies with electronic textures, creating dreamlike soundscapes that blur the line between acoustic and digital.',
+    isLive: false,
+  },
+  {
+    id: 'dj-kampire',
+    stageId: 'stage-b',
+    name: 'DJ KAMPIRE',
+    time: '2:00PM',
+    coverImage: '',
+    bio: 'DJ Kampire is a Ugandan selector and cultural activist whose sets weave together afro-electronic sounds with political consciousness.',
+    isLive: false,
+  },
+  {
+    id: 'equiknoxx',
+    stageId: 'stage-b',
+    name: 'EQUIKNOXX',
+    time: '4:00PM',
+    coverImage: '',
+    bio: 'Equiknoxx is a Jamaican sound collective fusing dancehall, dub, and avant-garde electronics into alien club music.',
+    isLive: false,
+  },
+  {
+    id: 'nihiloxica',
+    stageId: 'stage-b',
+    name: 'NIHILOXICA',
+    time: '6:00PM',
+    coverImage: '',
+    bio: 'Nihiloxica is a Kampala-based percussion ensemble melding traditional Buganda drumming with driving techno.',
+    isLive: false,
+  },
+  {
+    id: 'dopplereffekt',
+    stageId: 'stage-c',
+    name: 'DOPPLEREFFEKT',
+    time: '4:00PM',
+    coverImage: '',
+    bio: 'Dopplereffekt is a Detroit electronic music project known for its minimal, austere approach to techno and electro.',
+    isLive: false,
+  },
+  {
+    id: 'mykki-blanco',
+    stageId: 'stage-c',
+    name: 'MYKKI BLANCO',
+    time: '8:00PM',
+    coverImage: '',
+    bio: 'Mykki Blanco is a rapper, performance artist, and activist whose work deconstructs genre and identity with radical abandon.',
+    isLive: false,
+  },
+];
+
+export const tracks: Track[] = [
+  { id: 'track-1', artistId: 'lulu-matahan', title: 'TRACK 1', duration: '4:22' },
+  { id: 'track-2', artistId: 'lulu-matahan', title: 'TRACK 2', duration: '5:11' },
+  { id: 'track-3', artistId: 'lulu-matahan', title: 'TRACK 3', duration: '3:47' },
+];

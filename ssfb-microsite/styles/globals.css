@@ -1,0 +1,65 @@
+@import url('https://fonts.googleapis.com/css2?family=Azeret+Mono:wght@400;600&display=swap');
+
+/* TODO: add Flama font file */
+@font-face {
+  font-family: 'Flama Condensed Trial';
+  src: url('/fonts/FlamaCondensedTrial-SemiBold.woff2') format('woff2');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  /* Colors */
+  --color-red: #FF0000;
+  --color-red-dark: #B90000;
+  --color-red-muted: #FF8989;
+  --color-black: #000000;
+  --color-white: #FFFFFF;
+  --color-gray-600: #454545;
+  --color-gray-800: #1E1E1E;
+
+  /* Typography */
+  --font-display: 'Flama Condensed Trial', 'Arial Narrow', sans-serif;
+  --font-ui: 'Azeret Mono', monospace;
+
+  --text-hero: 101px;
+  --text-title: 80px;
+  --text-nav: 18px;
+  --text-body: 16px;
+
+  --leading-display: 0.855;
+  --leading-body: 0.85;
+  --tracking-body: -0.64px;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  font-family: var(--font-ui);
+  background: var(--color-white);
+  color: var(--color-black);
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  background: none;
+  font-family: inherit;
+}
