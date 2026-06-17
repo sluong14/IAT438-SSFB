@@ -1,6 +1,14 @@
 .DS_Store
 **/.DS_Store
 
+# Dependencies & build output
+.next/
+node_modules/
+tsconfig.tsbuildinfo
+
+# Secrets
+.env.local
+
 # Large audio files — share locally, do not commit
 *.wav
 *.WAV
