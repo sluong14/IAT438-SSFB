@@ -32,7 +32,7 @@ function Chip({
   const style =
     variant === 'black'
       ? { background: '#000000', color: '#ffffff' }
-      : { background: '#B90000', color: '#ffffff' };
+      : { background: '#FF0000', color: '#ffffff' };
 
   if (href) {
     return (
@@ -70,8 +70,8 @@ export default function NavStrip({
         <Chip href={`/stage/${currentStageId}`}>{currentStage}</Chip>
       )}
 
-      {/* Stage artists mode: live info expands from left after entry sequence */}
-      {!isSetlistMode && liveInfo && (
+      {/* Live info — shown in both stage and setlist modes */}
+      {liveInfo && (
         <div
           className="flex items-center overflow-hidden"
           style={{

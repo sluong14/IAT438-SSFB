@@ -5,16 +5,70 @@ import { notFound } from 'next/navigation';
 import { stages } from '@/data/stages';
 import { artists } from '@/data/artists';
 import NavStrip from '@/components/NavStrip/NavStrip';
+import StippleText from '@/components/StippleText/StippleText';
 import { playClickSound } from '@/utils/playClickSound';
+import { getCurrentLive } from '@/utils/liveArtist';
 
-// Figma design assets (expire after 7 days — replace with /public copies for production)
 const IMG_STAR      = '/images/vinyl-disc.svg';
 const IMG_RED       = '/images/vinyl-red.svg';
-
-
-// Test audio — swap for the per-artist track once that data exists
-const TRACK_AUDIO_SRC = encodeURI('/sounds/Vladimir Ivkovic at Strange Sounds From Beyond 2018.wav');
 const PAUSE_SOUND_SRC = '/sounds/pause-soundeffect.mp3';
+
+// Per-artist audio. Missing tracks use a thematically close fallback from the same stage.
+const ARTIST_AUDIO: Record<string, string> = {
+  // ── The Rest Is Noise ──────────────────────────────────────────────────────
+  'tala-drum-corps':             '/audio/The Rest Is Noise/Tala Drum Corps - Refraction-S - Parade EP - [BAKK014] - 2019.mp3',
+  'dj-kampire':                  '/audio/The Rest Is Noise/DJ Kampire - Gatluak (Gan Gah, Cardi Monáe & Kampire Remix).mp3',
+  'equiknoxx':                   '/audio/The Rest Is Noise/Equiknoxx - Fly Away.mp3',
+  'oceanic':                     '/audio/The Rest Is Noise/Oceanic - Even If I lose Everything (DJ Version).mp3',
+  'nihiloxica':                  '/audio/The Rest Is Noise/Nihiloxica - Bwola.mp3',
+  'dj-marfox':                   '/audio/The Rest Is Noise/DR Marfox - Subliminar.mp3',
+  'mykki-blanco':                '/audio/The Rest Is Noise/Mykki Blanco - The Plug Won_t.mp3',
+  'deena-abdelwahed':            '/audio/The Rest Is Noise/Deena Abdelwahed - Lila Fi Tounes.mp3',
+  'lanark-artefax':              '/audio/The Rest Is Noise/Lanark Artefax - Touch Absence WHYT011.mp3',
+  'osdorp-tapes':                '/audio/The Rest Is Noise/Osdorp_Tapes_Durma_Dans_Et_III_recorded_live_KLICKAUD.mp3',
+  'izabel':                      '/audio/The Rest Is Noise/Izabel Caligiore - Geoffrey Landers - Breedlove.mp3',
+  'strange-boutique':            '/audio/The Rest Is Noise/Strange Boutique - Drown 4.mp3',
+  'letta-mbulu':                 '/audio/The Rest Is Noise/Letta Mbulu - Nomalizo Official Audio.mp3',
+  'african-acid-is-the-future':  '/audio/The Rest Is Noise/African Acid Is The Future - Okana Tali (Living Room Session).mp3',
+  'shanbehzadeh-ensemble':       '/audio/The Rest Is Noise/Shanbehzadeh Ensemble - Couleurs du monde.mp3',
+  'rabih-beaini':                '/audio/The Rest Is Noise/rabih beaini - Song of Extreme Happiness.mp3',
+  'ammar-808':                   '/audio/The Rest Is Noise/AMMAR 808 Featuring Brahim Riahi _ Douri Douri _ عمار 808 & براهيم الرياحي "دوري دوري".mp3',
+
+  // ── Red Light Radio ────────────────────────────────────────────────────────
+  'merel':                       '/audio/Red Light Radio/Merel (1).mp3',
+  'les-filles-de-illighadad':    '/audio/Red Light Radio/Les Filles de Illighadad (1).mp3',
+  'lulu-and-mata-hari':          '/audio/Red Light Radio/Fenna.mp3',                     // fallback
+  'vladimir-ivkovic-1':          '/audio/Vladimir.mp3',
+  'nurse-with-wound':            '/audio/Red Light Radio/Identified Patient - 5th December 2025.mp3', // fallback
+  'vladimir-ivkovic-2':          '/audio/Vladimir.mp3',
+  'zozo':                        '/audio/Red Light Radio/Die Orangen - Krautback (Full Circle_s Fail We May Sail We Must Remix).mp3', // fallback
+  'orpheu-the-wizard':           '/audio/Red Light Radio/Merel (1).mp3',                 // fallback
+  'fenna-fiction':               '/audio/Red Light Radio/Fenna.mp3',
+  'dollkraut-band':              '/audio/Red Light Radio/Dollkraut.mp3',
+  'twice-upon-a-time':           '/audio/Red Light Radio/Fenna.mp3',                     // fallback
+  'ramzi-djfati':                '/audio/Red Light Radio/DJFati.mp3',
+  'die-orangen':                 '/audio/Red Light Radio/Die Orangen - Krautback (Full Circle_s Fail We May Sail We Must Remix).mp3',
+  'man-miran':                   '/audio/Red Light Radio/Dollkraut.mp3',                 // fallback
+  'dj-marcelle':                 '/audio/Red Light Radio/Die Orangen - Krautback (Full Circle_s Fail We May Sail We Must Remix).mp3', // fallback
+  'identified-patient':          '/audio/Red Light Radio/Identified Patient - 5th December 2025.mp3',
+
+  // ── Tent ───────────────────────────────────────────────────────────────────
+  'randstad':                    '/audio/Tent/Antal @ Strange Sounds From Beyond 25.06.2017 CUT.mp3', // fallback
+  'job-sifre':                   '/audio/Tent/Young Marco.mp3',                          // fallback
+  'die-wilde-jago':              '/audio/Alessandro.mp3',                                // fallback
+  'dopplereffekt':               '/audio/Nihiloxica.mp3',                               // fallback
+  'jasss':                       '/audio/Alessandro.mp3',                                // fallback
+  'alessandro-adriani-the-hacker': '/audio/Alessandro.mp3',
+  'giant-swan':                  '/audio/Alessandro.mp3',                                // fallback
+  'i-f':                         '/audio/Tent/Young Marco.mp3',                          // fallback
+  'satoshi':                     '/audio/Tent/Satoshi.mp3',
+  'margie':                      '/audio/Tent/Satoshi.mp3',                             // fallback
+  'dj-paulao':                   '/audio/Tent/Antal @ Strange Sounds From Beyond 25.06.2017 CUT.mp3', // fallback
+  'young-marco':                 '/audio/Tent/Young Marco.mp3',
+  'leroy-burgess':               '/audio/Tent/Satoshi.mp3',                             // fallback
+  'antal':                       '/audio/Tent/Antal @ Strange Sounds From Beyond 25.06.2017 CUT.mp3',
+  'hunee':                       '/audio/Tent/Antal @ Strange Sounds From Beyond 25.06.2017 CUT.mp3', // fallback
+};
 
 // Wheel → audio mapping: rotation maps directly to playback position
 const SCRUB_SECONDS_PER_DEGREE = 10 / 360;
@@ -48,7 +102,7 @@ function angleToGainDb(angleDeg: number) {
 // True reverse playback isn't possible with <audio> (browsers don't honor
 // negative playbackRate), so the range bottoms out at 0x (stopped) rather
 // than going negative.
-const TEMPO_MIN = 0;
+const TEMPO_MIN = 0.0625; // browser minimum playbackRate (Chrome enforces ≥ 0.0625)
 const TEMPO_MAX = 2;
 const TEMPO_DEFAULT = 1;
 const TEMPO_THUMB_H = 44;   // thumb height in vertical orientation
@@ -378,6 +432,12 @@ export default function SetlistPage({
   const prevArtist = stageArtists[(displayIndex - 1 + n) % n];
   const nextArtist = stageArtists[(displayIndex + 1) % n];
 
+  const isFirstRender = useRef(true);
+  useEffect(() => {
+    if (isFirstRender.current) { isFirstRender.current = false; return; }
+    window.history.replaceState(null, '', `/stage/${params.stageId}/${displayArtist.id}`);
+  }, [displayIndex]);
+
   // Nav link color — black when over the red ring, red otherwise.
   // mix-blend-mode: difference can't cross GPU compositor layers (the animated
   // wheel forces a separate layer), so we compute it geometrically instead.
@@ -410,6 +470,13 @@ export default function SetlistPage({
   useEffect(() => {
     const t = setTimeout(() => setLiveInfoVisible(true), 50);
     return () => clearTimeout(t);
+  }, []);
+
+  const [liveArtist, setLiveArtist] = useState(() => getCurrentLive(stageArtists));
+  useEffect(() => {
+    const tick = () => setLiveArtist(getCurrentLive(stageArtists));
+    const id = setInterval(tick, 60_000);
+    return () => clearInterval(id);
   }, []);
 
   // Entrance animation states
@@ -448,12 +515,14 @@ export default function SetlistPage({
     else audio.pause();
   }, [isPlaying]);
 
-  // Stop playback when switching to a different artist
+  // Stop playback and load the correct track when switching artists
   useEffect(() => {
     const audio = audioRef.current;
     if (audio) {
       audio.pause();
       audio.currentTime = 0;
+      audio.src = encodeURI(ARTIST_AUDIO[displayArtist.id] ?? '/audio/Nihiloxica.mp3');
+      audio.load();
     }
     setIsPlaying(false);
     document.dispatchEvent(new CustomEvent('ambient-restore'));
@@ -471,7 +540,7 @@ export default function SetlistPage({
   function handleTempoChange(rate: number) {
     setTempoRate(rate);
     const audio = audioRef.current;
-    if (audio) audio.playbackRate = rate;
+    if (audio) audio.playbackRate = Math.max(TEMPO_MIN, rate);
   }
 
   const [volume, setVolume] = useState(VOLUME_DEFAULT);
@@ -719,14 +788,14 @@ export default function SetlistPage({
         -PITCH_BEND_MAX_OCTAVES,
         Math.min(PITCH_BEND_MAX_OCTAVES, angularVelocity * PITCH_BEND_OCTAVES_PER_DEG_PER_SEC)
       );
-      audio.playbackRate = tempoRate * Math.pow(2, octaves);
+      audio.playbackRate = Math.max(TEMPO_MIN, tempoRate * Math.pow(2, octaves));
     }
   }
 
   function onWheelPointerUp(e: React.PointerEvent<HTMLDivElement>) {
     (e.target as HTMLElement).releasePointerCapture(e.pointerId);
     const audio = audioRef.current;
-    if (audio) audio.playbackRate = tempoRate;
+    if (audio) audio.playbackRate = Math.max(TEMPO_MIN, tempoRate);
     setWheelDragging(false);
   }
 
@@ -852,7 +921,7 @@ export default function SetlistPage({
         style={{ top: '46%', transform: 'translate(-50%, -50%)', gap: '3vw', opacity: controlsIn ? 1 : 0, transition: 'opacity 0.8s ease' }}
       >
         {/* Prev / current / next artist row — fixed grid so layout never shifts with name length */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 36vw 1fr', width: '90vw', alignItems: 'center', height: 'clamp(100px, 14vw, 220px)' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 36vw 1fr', gridTemplateRows: 'clamp(100px, 14vw, 220px)', width: '90vw', alignItems: 'center', overflow: 'visible', transform: 'translateY(4px)' }}>
           <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
             <button
               className="uppercase text-black"
@@ -863,23 +932,11 @@ export default function SetlistPage({
             </button>
           </div>
 
-          <p
-            className="uppercase text-black text-center"
-            style={{
-              width: '36vw',
-              height: '100%',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontFamily: 'var(--font-display)',
-              fontSize: 'clamp(48px, 5.8vw, 100px)',
-              fontWeight: 600,
-              lineHeight: 0.85,
-              overflow: 'visible',
-            }}
-          >
-            {displayArtist.name}
-          </p>
+          <StippleText
+            text={displayArtist.name}
+            canvasWidth={900}
+            style={{ width: '100%', height: 'auto' }}
+          />
 
           <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
             <button
@@ -894,7 +951,7 @@ export default function SetlistPage({
 
         {/* Play/pause */}
         <PlayPauseButton playing={isPlaying} onToggle={handlePlayPauseToggle} />
-        <audio ref={audioRef} src={TRACK_AUDIO_SRC} preload="none" />
+        <audio ref={audioRef} preload="none" />
         <audio ref={pauseSoundRef} src={PAUSE_SOUND_SRC} preload="auto" />
       </div>
 
@@ -962,7 +1019,7 @@ export default function SetlistPage({
       <NavStrip
         currentStage={stage.label}
         currentStageId={stage.id}
-        liveInfo={stage.liveArtist ? `· LIVE NOW: ${stage.liveArtist}` : undefined}
+        liveInfo={liveArtist ? `· LIVE NOW: ${liveArtist.name}` : undefined}
         liveInfoVisible={liveInfoVisible}
         otherStages={otherStages.map((s) => ({ label: s.label, id: s.id }))}
       />

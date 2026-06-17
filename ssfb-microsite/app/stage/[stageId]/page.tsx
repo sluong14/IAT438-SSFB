@@ -6,6 +6,8 @@ import { stages } from '@/data/stages';
 import { artists } from '@/data/artists';
 import NavStrip from '@/components/NavStrip/NavStrip';
 import StageScene from '@/components/StageScene/StageScene';
+import StippleText from '@/components/StippleText/StippleText';
+import { getCurrentLive } from '@/utils/liveArtist';
 
 export default function StageArtistsPage({ params }: { params: { stageId: string } }) {
   const stage = stages.find((s) => s.id === params.stageId);
@@ -13,8 +15,15 @@ export default function StageArtistsPage({ params }: { params: { stageId: string
 
   const stageArtists = artists.filter((a) => a.stageId === params.stageId);
   const sorted = [...stageArtists].sort((a, b) => (b.isLive ? 1 : 0) - (a.isLive ? 1 : 0));
-  const liveArtist = stageArtists.find((a) => a.isLive);
   const otherStages = stages.filter((s) => s.id !== params.stageId);
+
+  const [liveArtist, setLiveArtist] = useState(() => getCurrentLive(stageArtists));
+
+  useEffect(() => {
+    const tick = () => setLiveArtist(getCurrentLive(stageArtists));
+    const id = setInterval(tick, 60_000);
+    return () => clearInterval(id);
+  }, []);
 
   const [liveInfoVisible, setLiveInfoVisible] = useState(false);
   const heroRef = useRef<HTMLDivElement>(null);
@@ -45,20 +54,7 @@ export default function StageArtistsPage({ params }: { params: { stageId: string
         className="fixed inset-0 flex items-center justify-center pointer-events-none z-20"
         style={{ opacity: 0, transition: 'opacity 0.8s ease' }}
       >
-        <h1
-          style={{
-            fontFamily: 'var(--font-display)',
-            fontSize: 'clamp(60px, 8vw, 120px)',
-            fontWeight: 600,
-            lineHeight: 0.9,
-            textAlign: 'center',
-            textTransform: 'uppercase',
-            color: '#000000',
-            letterSpacing: '-0.02em',
-          }}
-        >
-          {stage.name}
-        </h1>
+        <StippleText text={stage.name} />
       </div>
 
       <NavStrip
