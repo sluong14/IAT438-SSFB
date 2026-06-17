@@ -60,8 +60,8 @@ function to24h(timeStr: string): string {
   return `${hour.toString().padStart(2, '0')}:${min.padStart(2, '0')}`;
 }
 
-const LIVE_LEFT_PCT = timeToPercent('6:00PM');
-const LIVE_MINUTES = 18 * 60;
+const LIVE_LEFT_PCT = timeToPercent('6:30PM');
+const LIVE_MINUTES = 18 * 60 + 30;
 
 function parseToMinutes(timeStr: string): number {
   const match = timeStr.match(/^(\d+):?(\d*)([AP]M)$/i);
@@ -170,7 +170,7 @@ function LiveIndicator({ isPlaying, barRefs }: {
         style={{ bottom: 4, left: 0, transform: 'translateX(-50%)', whiteSpace: 'nowrap' }}
       >
         <span className="text-red uppercase" style={{ fontFamily: 'var(--font-ui)', fontSize: '12px', letterSpacing: '-0.5px' }}>
-          18:00
+          18:30
         </span>
         <div className="bg-red px-[8px] py-[1px]">
           <span className="text-white uppercase" style={{ fontFamily: 'var(--font-ui)', fontSize: '12px', letterSpacing: '-0.5px' }}>
