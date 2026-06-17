@@ -110,10 +110,7 @@ a {
   pointer-events: none;
 }
 
-.stippling-highlight path {
-  opacity: 0;
-  transition: opacity 180ms ease;
-}
+/* .stippling-highlight visibility is controlled by JS mask-image on the container */
 
 @keyframes card-appear {
   from { opacity: 0; transform: scale(0.97); }
