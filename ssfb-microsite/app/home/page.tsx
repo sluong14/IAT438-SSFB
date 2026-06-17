@@ -5,7 +5,7 @@ import TimeDisplay from '@/components/TimeDisplay/TimeDisplay';
 export default function Home() {
   return (
     <main className="relative flex-1 overflow-hidden">
-      {/* Map background — drop map.svg into /public/map.svg */}
+      {/* Map background */}
       <div
         className="fixed inset-0 pointer-events-none z-0"
         style={{

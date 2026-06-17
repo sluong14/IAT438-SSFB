@@ -43,3 +43,45 @@ a {
 /* Hide horizontal scrollbar on timeline */
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
+
+/* ── Entry page ──────────────────────────────────────────────────────────── */
+.label {
+  font-family: var(--font-ui);
+  font-size: clamp(11px, 1vw, 14px);
+  letter-spacing: -0.44px;
+  text-transform: uppercase;
+  color: black;
+  background: white;
+  padding: 2px 6px;
+  white-space: nowrap;
+}
+
+.entry-cta {
+  background-color: black;
+  color: white;
+  padding: 8px 18px;
+  font-size: clamp(12px, 1.1vw, 15px);
+  transition: background-color 150ms ease, color 150ms ease;
+}
+.entry-cta:hover {
+  background-color: white;
+  color: black;
+}
+
+.tracking-line {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 1px;
+  height: 100vh;
+  background-color: #FF0000;
+  opacity: 0;
+  transition: opacity 180ms ease;
+  z-index: 202;
+  pointer-events: none;
+}
+
+.stippling-highlight path {
+  opacity: 0;
+  transition: opacity 180ms ease;
+}
