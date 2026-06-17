@@ -40,7 +40,6 @@ a {
   color: inherit;
 }
 
-@keyframes waveform {
-  0%, 100% { transform: scaleY(0.25); }
-  50% { transform: scaleY(1); }
-}
+/* Hide horizontal scrollbar on timeline */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
