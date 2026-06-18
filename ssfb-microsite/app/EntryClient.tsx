@@ -9,6 +9,10 @@ const HIDDEN_MASK = 'radial-gradient(ellipse 0px 0px at 50% 50%, transparent 100
 
 const BLACK_MATRIX = '0.801 0.801 0.801 0 -1.404  0.801 0.801 0.801 0 -1.404  0.801 0.801 0.801 0 -1.404  0 0 0 1 0';
 
+const GLITCH_CHARS  = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#!|/\\><^';
+const GLITCH_FRAMES = 12;
+const CTA_PHRASES   = ["[WHAT'S YOUR SOUND?]", '[CLICK TO ENTER SITE]'] as const;
+
 const ZONE_CENTERS = [1 / 6, 1 / 2, 5 / 6] as const;
 const ZONE_FALLOFF = 1 / 3;
 const ZONE_MAX_VOL = 0.75;
@@ -22,8 +26,12 @@ export default function EntryClient() {
   const greyVideoRef   = useRef<HTMLVideoElement>(null);
   const redVideoRef    = useRef<HTMLVideoElement>(null);
   const overlayWrapRef = useRef<HTMLDivElement>(null);
-  const zoneRefs       = useRef<(HTMLAudioElement | null)[]>([null, null, null]);
-  const ctaRef         = useRef<HTMLAnchorElement>(null);
+  const zoneRefs        = useRef<(HTMLAudioElement | null)[]>([null, null, null]);
+  const ctaRef          = useRef<HTMLAnchorElement>(null);
+  const ctaTextRef      = useRef<HTMLSpanElement>(null);
+  const scrambleRafRef  = useRef<number | null>(null);
+  const scrambleFrameRef = useRef(0);
+  const ctaPhraseIdxRef = useRef(0);
 
   const [isMuted, setIsMuted] = useState(false);
 
@@ -54,6 +62,41 @@ export default function EntryClient() {
 
     grey.addEventListener('canplaythrough', onReady, { once: true });
     return () => grey.removeEventListener('canplaythrough', onReady);
+  }, []);
+
+  useEffect(() => {
+    const scrambleTo = (target: string) => {
+      if (scrambleRafRef.current) cancelAnimationFrame(scrambleRafRef.current);
+      scrambleFrameRef.current = 0;
+      const tick = () => {
+        scrambleFrameRef.current++;
+        const progress = Math.min(scrambleFrameRef.current / GLITCH_FRAMES, 1);
+        const resolved = Math.floor(progress * target.length);
+        const result = target.split('').map((char, i) => {
+          if (i < resolved) return char;
+          if (char === ' ') return ' ';
+          return GLITCH_CHARS[Math.floor(Math.random() * GLITCH_CHARS.length)];
+        }).join('');
+        if (ctaTextRef.current) ctaTextRef.current.textContent = result;
+        if (scrambleFrameRef.current < GLITCH_FRAMES) {
+          scrambleRafRef.current = requestAnimationFrame(tick);
+        } else {
+          if (ctaTextRef.current) ctaTextRef.current.textContent = target;
+          scrambleRafRef.current = null;
+        }
+      };
+      scrambleRafRef.current = requestAnimationFrame(tick);
+    };
+
+    const interval = setInterval(() => {
+      ctaPhraseIdxRef.current = (ctaPhraseIdxRef.current + 1) % CTA_PHRASES.length;
+      scrambleTo(CTA_PHRASES[ctaPhraseIdxRef.current]);
+    }, 3000);
+
+    return () => {
+      clearInterval(interval);
+      if (scrambleRafRef.current) cancelAnimationFrame(scrambleRafRef.current);
+    };
   }, []);
 
   const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
@@ -184,7 +227,7 @@ export default function EntryClient() {
           style={{ position: 'fixed', top: 0, left: 0, transform: 'translate(-9999px, -9999px)', opacity: 0, pointerEvents: 'auto', cursor: 'none', padding: 0, lineHeight: 1, textAlign: 'center', backgroundColor: '#FF0000', color: '#ffffff' }}
           onClick={playClickSound}
         >
-          [CLICK TO<br/>ENTER SITE]
+          <span ref={ctaTextRef}>{CTA_PHRASES[0]}</span>
         </Link>
 
         <button
