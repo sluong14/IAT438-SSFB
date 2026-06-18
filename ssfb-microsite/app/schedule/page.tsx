@@ -1,8 +1,61 @@
 'use client';
 import { useState, useRef, useEffect } from 'react';
+import { playClickSound } from '@/utils/playClickSound';
 import type { Artist } from '@/types';
 import { saturdayArtists, sundayArtists } from '@/data/artists';
 import { stages } from '@/data/stages';
+import StippleText from '@/components/StippleText/StippleText';
+
+const ARTIST_AUDIO: Record<string, string> = {
+  'tala-drum-corps':             '/audio/The Rest Is Noise/Tala Drum Corps - Refraction-S - Parade EP - [BAKK014] - 2019.mp3',
+  'dj-kampire':                  '/audio/The Rest Is Noise/DJ Kampire - Gatluak (Gan Gah, Cardi Monáe & Kampire Remix).mp3',
+  'equiknoxx':                   '/audio/The Rest Is Noise/Equiknoxx - Fly Away.mp3',
+  'oceanic':                     '/audio/The Rest Is Noise/Oceanic - Even If I lose Everything (DJ Version).mp3',
+  'nihiloxica':                  '/audio/The Rest Is Noise/Nihiloxica - Bwola.mp3',
+  'dj-marfox':                   '/audio/The Rest Is Noise/DR Marfox - Subliminar.mp3',
+  'mykki-blanco':                '/audio/The Rest Is Noise/Mykki Blanco - The Plug Won_t.mp3',
+  'deena-abdelwahed':            '/audio/The Rest Is Noise/Deena Abdelwahed - Lila Fi Tounes.mp3',
+  'lanark-artefax':              '/audio/The Rest Is Noise/Lanark Artefax - Touch Absence WHYT011.mp3',
+  'osdorp-tapes':                '/audio/The Rest Is Noise/Osdorp_Tapes_Durma_Dans_Et_III_recorded_live_KLICKAUD.mp3',
+  'izabel':                      '/audio/The Rest Is Noise/Izabel Caligiore - Geoffrey Landers - Breedlove.mp3',
+  'strange-boutique':            '/audio/The Rest Is Noise/Strange Boutique - Drown 4.mp3',
+  'letta-mbulu':                 '/audio/The Rest Is Noise/Letta Mbulu - Nomalizo Official Audio.mp3',
+  'african-acid-is-the-future':  '/audio/The Rest Is Noise/African Acid Is The Future - Okana Tali (Living Room Session).mp3',
+  'shanbehzadeh-ensemble':       '/audio/The Rest Is Noise/Shanbehzadeh Ensemble - Couleurs du monde.mp3',
+  'rabih-beaini':                '/audio/The Rest Is Noise/rabih beaini - Song of Extreme Happiness.mp3',
+  'ammar-808':                   '/audio/The Rest Is Noise/AMMAR 808 Featuring Brahim Riahi _ Douri Douri _ عمار 808 & براهيم الرياحي "دوري دوري".mp3',
+  'merel':                       '/audio/Red Light Radio/Merel (1).mp3',
+  'les-filles-de-illighadad':    '/audio/Red Light Radio/Les Filles de Illighadad (1).mp3',
+  'lulu-and-mata-hari':          '/audio/Red Light Radio/Fenna.mp3',
+  'vladimir-ivkovic-1':          '/audio/Vladimir.mp3',
+  'nurse-with-wound':            '/audio/Red Light Radio/Identified Patient - 5th December 2025.mp3',
+  'vladimir-ivkovic-2':          '/audio/Vladimir.mp3',
+  'zozo':                        '/audio/Red Light Radio/Die Orangen - Krautback (Full Circle_s Fail We May Sail We Must Remix).mp3',
+  'orpheu-the-wizard':           '/audio/Red Light Radio/Merel (1).mp3',
+  'fenna-fiction':               '/audio/Red Light Radio/Fenna.mp3',
+  'dollkraut-band':              '/audio/Red Light Radio/Dollkraut.mp3',
+  'twice-upon-a-time':           '/audio/Red Light Radio/Fenna.mp3',
+  'ramzi-djfati':                '/audio/Red Light Radio/DJFati.mp3',
+  'die-orangen':                 '/audio/Red Light Radio/Die Orangen - Krautback (Full Circle_s Fail We May Sail We Must Remix).mp3',
+  'man-miran':                   '/audio/Red Light Radio/Dollkraut.mp3',
+  'dj-marcelle':                 '/audio/Red Light Radio/Die Orangen - Krautback (Full Circle_s Fail We May Sail We Must Remix).mp3',
+  'identified-patient':          '/audio/Red Light Radio/Identified Patient - 5th December 2025.mp3',
+  'randstad':                    '/audio/Tent/Antal @ Strange Sounds From Beyond 25.06.2017 CUT.mp3',
+  'job-sifre':                   '/audio/Tent/Young Marco.mp3',
+  'die-wilde-jago':              '/audio/Alessandro.mp3',
+  'dopplereffekt':               '/audio/Nihiloxica.mp3',
+  'jasss':                       '/audio/Alessandro.mp3',
+  'alessandro-adriani-the-hacker': '/audio/Alessandro.mp3',
+  'giant-swan':                  '/audio/Alessandro.mp3',
+  'i-f':                         '/audio/Tent/Young Marco.mp3',
+  'satoshi':                     '/audio/Tent/Satoshi.mp3',
+  'margie':                      '/audio/Tent/Satoshi.mp3',
+  'dj-paulao':                   '/audio/Tent/Antal @ Strange Sounds From Beyond 25.06.2017 CUT.mp3',
+  'young-marco':                 '/audio/Tent/Young Marco.mp3',
+  'leroy-burgess':               '/audio/Tent/Satoshi.mp3',
+  'antal':                       '/audio/Tent/Antal @ Strange Sounds From Beyond 25.06.2017 CUT.mp3',
+  'hunee':                       '/audio/Tent/Antal @ Strange Sounds From Beyond 25.06.2017 CUT.mp3',
+};
 
 const HOURS = ['12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00', '21:00', '22:00', '23:00'];
 const START_HOUR = 12;
@@ -10,24 +63,8 @@ const TOTAL_HOURS = 11;
 const STAGE_ROW_HEIGHT = 120;
 const ARTIST_OFFSET = 50;
 const RULE_BOTTOM = 70;
-const NUM_WAVEFORM_BARS = 30;
-
-const STAGE_COLORS: Record<string, string> = {
-  'stage-a': '#1461FB',
-  'stage-b': '#E91E8C',
-  'stage-c': '#8B1FFF',
-};
-
-// Artists with click-to-play functionality
-const PLAYABLE_IDS = new Set(['nihiloxica', 'vladimir-ivkovic-1', 'vladimir-ivkovic-2', 'alessandro-adriani-the-hacker']);
-
-const ARTIST_AUDIO: Record<string, string> = {
-  'nihiloxica':                    '/audio/Nihiloxica.mp3',
-  'vladimir-ivkovic-1':            '/audio/Vladimir.mp3',
-  'vladimir-ivkovic-2':            '/audio/Vladimir.mp3',
-  'alessandro-adriani-the-hacker': '/audio/Alessandro.mp3',
-};
-
+const LIVE_IDS = new Set(['nihiloxica', 'vladimir-ivkovic-2', 'alessandro-adriani-the-hacker']);
+const NUM_WAVEFORM_BARS = 400;
 const GLITCH_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#!|/\\><^';
 const GLITCH_FRAMES = 22;
 
@@ -75,17 +112,15 @@ function parseToMinutes(timeStr: string): number {
   return hour * 60 + min;
 }
 
-function ArtistLabel({ artist, muted, isPlaying, onPlay }: {
+function ArtistLabel({ artist, muted, lineBreakAfter, onHoverStart, onHoverEnd }: {
   artist: Artist;
   muted?: boolean;
-  isPlaying?: boolean;
-  onPlay?: () => void;
+  lineBreakAfter?: string;
+  onHoverStart?: () => void;
+  onHoverEnd?: () => void;
 }) {
-  const isPlayable = PLAYABLE_IDS.has(artist.id);
-
-  const hoverTarget = isPlayable
-    ? '[CLICK TO PLAY MUSIC]'
-    : (artist.endTime ? `${to24h(artist.time)}–${to24h(artist.endTime)}` : to24h(artist.time));
+  const timeRange = artist.time.match(/[A-Z]{3}\s+(\d{1,2}:\d{2})[^\d]+(\d{1,2}:\d{2})/);
+  const hoverTarget = timeRange ? `${timeRange[1]}–${timeRange[2]}` : to24h(artist.time);
 
   const [text, setText] = useState(artist.name);
   const rafRef = useRef<number | null>(null);
@@ -117,58 +152,36 @@ function ArtistLabel({ artist, muted, isPlaying, onPlay }: {
     return () => { if (rafRef.current) cancelAnimationFrame(rafRef.current); };
   }, []);
 
+  const parts = lineBreakAfter ? text.split(new RegExp(`(?<=${lineBreakAfter})\\s*`, 'i')) : null;
+
   return (
     <div
-      className="uppercase cursor-pointer select-none"
+      className="uppercase select-none"
       style={{
         fontFamily: 'var(--font-ui)',
         fontSize: '16px',
         letterSpacing: '-0.64px',
         maxWidth: '180px',
-        color: muted ? '#909090' : isPlaying ? '#FF0000' : '#111111',
+        color: muted ? '#909090' : '#111111',
       }}
-      onMouseEnter={() => scrambleTo(hoverTarget)}
-      onMouseLeave={() => scrambleTo(artist.name)}
-      onClick={isPlayable ? onPlay : undefined}
+      onMouseEnter={() => { scrambleTo(hoverTarget); onHoverStart?.(); }}
+      onMouseLeave={() => { scrambleTo(artist.name); onHoverEnd?.(); }}
     >
-      {text}
+      {parts ? parts.map((part, i) => <div key={i}>{part}</div>) : text}
     </div>
   );
 }
 
-function LiveIndicator({ isPlaying, barRefs }: {
-  isPlaying: boolean;
-  barRefs: { current: (HTMLDivElement | null)[] };
-}) {
+function LiveIndicator() {
   return (
     <div
       className="absolute top-0 bottom-0 z-20 pointer-events-none"
       style={{ left: `${LIVE_LEFT_PCT}%` }}
     >
       <div className="absolute top-0 left-0 w-px bg-red" style={{ bottom: RULE_BOTTOM }} />
-
-      {/* Waveform — always in DOM so barRefs stay populated; opacity controls visibility */}
-      <div
-        className="absolute flex items-end gap-[2px]"
-        style={{
-          bottom: RULE_BOTTOM + 4,
-          transform: 'translateX(-50%)',
-          opacity: isPlaying ? 1 : 0,
-          transition: 'opacity 0.3s ease',
-        }}
-      >
-        {Array.from({ length: NUM_WAVEFORM_BARS }, (_, i) => (
-          <div
-            key={i}
-            ref={el => { barRefs.current[i] = el; }}
-            style={{ width: 2, height: 4, backgroundColor: '#FF0000', transformOrigin: 'bottom' }}
-          />
-        ))}
-      </div>
-
       <div
         className="absolute flex flex-col items-center gap-[3px]"
-        style={{ bottom: 4, left: 0, transform: 'translateX(-50%)', whiteSpace: 'nowrap' }}
+        style={{ bottom: 14, left: 0, transform: 'translateX(-50%)', whiteSpace: 'nowrap' }}
       >
         <span className="text-red uppercase" style={{ fontFamily: 'var(--font-ui)', fontSize: '12px', letterSpacing: '-0.5px' }}>
           18:30
@@ -185,19 +198,20 @@ function LiveIndicator({ isPlaying, barRefs }: {
 
 export default function SchedulePage() {
   const [activeDate, setActiveDate] = useState<'sat' | 'sun'>('sat');
-  const [hoveredStage, setHoveredStage] = useState<string | null>(null);
-  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+  const [mousePos, setMousePos] = useState({ x: -100, y: -100 });
   const [inScheduleArea, setInScheduleArea] = useState(false);
   const [topPad, setTopPad] = useState(80);
-  const [playingArtistId, setPlayingArtistId] = useState<string | null>(null);
-
+  const [timelineBounds, setTimelineBounds] = useState({ top: 0, height: 0 });
   const timelineSectionRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const hoverAudioRef = useRef<HTMLAudioElement | null>(null);
   const audioCtxRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
+  const analyserDataRef = useRef<Uint8Array<ArrayBuffer> | null>(null);
+  const isHoveringLiveRef = useRef(false);
   const animRafRef = useRef<number | null>(null);
   const barRefs = useRef<(HTMLDivElement | null)[]>(new Array(NUM_WAVEFORM_BARS).fill(null));
+  const mousePosRef = useRef({ x: -100, y: -100 });
 
   const activeArtists = activeDate === 'sat' ? saturdayArtists : sundayArtists;
 
@@ -205,7 +219,7 @@ export default function SchedulePage() {
     if (!scrollRef.current) return;
     const el = scrollRef.current;
     const liveX = 24 + (LIVE_LEFT_PCT / 100) * 2140;
-    el.scrollLeft = Math.max(0, liveX - el.clientWidth / 3);
+    el.scrollLeft = Math.max(0, liveX - el.clientWidth / 2);
   };
 
   const scrollToStart = () => {
@@ -217,6 +231,8 @@ export default function SchedulePage() {
   useEffect(() => {
     const recalc = () => {
       if (!timelineSectionRef.current) return;
+      const rect = timelineSectionRef.current.getBoundingClientRect();
+      setTimelineBounds({ top: rect.top, height: rect.height });
       const usable = timelineSectionRef.current.clientHeight - RULE_BOTTOM;
       const content = stages.length * STAGE_ROW_HEIGHT;
       setTopPad(Math.max(70, Math.floor((usable - content) / 2)));
@@ -226,96 +242,122 @@ export default function SchedulePage() {
     return () => window.removeEventListener('resize', recalc);
   }, []);
 
-  const stopPlayback = () => {
+  useEffect(() => {
+    hoverAudioRef.current = new Audio();
+    const audio = hoverAudioRef.current;
+    const initCtx = () => {
+      if (audioCtxRef.current) return;
+      const ctx = new AudioContext();
+      const analyser = ctx.createAnalyser();
+      analyser.fftSize = 256;
+      analyser.smoothingTimeConstant = 0.75;
+      ctx.createMediaElementSource(audio).connect(analyser);
+      analyser.connect(ctx.destination);
+      audioCtxRef.current = ctx;
+      analyserRef.current = analyser;
+      analyserDataRef.current = new Uint8Array(analyser.frequencyBinCount);
+    };
+    document.addEventListener('click', initCtx, { once: true });
+    return () => { document.removeEventListener('click', initCtx); audio.pause(); };
+  }, []);
+
+  const stopWaveform = () => {
     if (animRafRef.current) { cancelAnimationFrame(animRafRef.current); animRafRef.current = null; }
-    if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; }
-    if (audioCtxRef.current) { audioCtxRef.current.close().catch(() => {}); audioCtxRef.current = null; }
-    analyserRef.current = null;
-    setPlayingArtistId(null);
-    barRefs.current.forEach(bar => { if (bar) bar.style.height = '4px'; });
+    barRefs.current.forEach(bar => { if (bar) bar.style.height = '0px'; });
   };
 
-  const startPlayback = (artistId: string) => {
-    stopPlayback();
+  const CONTENT_WIDTH = 2140;
+  const SCROLL_PADDING = 24;
 
-    const audioCtx = new AudioContext();
-    const analyser = audioCtx.createAnalyser();
-    analyser.fftSize = 128;
-    analyser.smoothingTimeConstant = 0.8;
-
-    const audio = new Audio(ARTIST_AUDIO[artistId]);
-    const source = audioCtx.createMediaElementSource(audio);
-    source.connect(analyser);
-    analyser.connect(audioCtx.destination);
-    audio.loop = true;
-    audio.play().catch(() => {});
-
-    audioRef.current = audio;
-    audioCtxRef.current = audioCtx;
-    analyserRef.current = analyser;
-    setPlayingArtistId(artistId);
-
-    const bufferLength = analyser.frequencyBinCount;
-    const dataArray = new Uint8Array(bufferLength);
-
+  const startWaveform = () => {
+    const heights = new Array(NUM_WAVEFORM_BARS).fill(0);
     const animate = () => {
-      analyser.getByteFrequencyData(dataArray);
-      for (let i = 0; i < NUM_WAVEFORM_BARS; i++) {
-        const bar = barRefs.current[i];
-        if (bar) {
-          const idx = Math.floor((i / NUM_WAVEFORM_BARS) * bufferLength);
-          bar.style.height = `${Math.max(4, (dataArray[idx] / 255) * 36 + 4)}px`;
+      if (analyserRef.current && analyserDataRef.current) {
+        analyserRef.current.getByteFrequencyData(analyserDataRef.current);
+      }
+      const rect = timelineSectionRef.current?.getBoundingClientRect();
+      const scrollLeft = scrollRef.current?.scrollLeft ?? 0;
+      if (rect) {
+        const cursorContentX = (mousePosRef.current.x - rect.left - SCROLL_PADDING) + scrollLeft;
+        const relX = Math.max(0, Math.min(1, cursorContentX / CONTENT_WIDTH));
+        const useAudio = isHoveringLiveRef.current && analyserDataRef.current !== null;
+        for (let i = 0; i < NUM_WAVEFORM_BARS; i++) {
+          const barX = i / (NUM_WAVEFORM_BARS - 1);
+          const dist = Math.abs(barX - relX);
+          const gaussian = Math.exp(-2500 * dist * dist);
+          let targetH: number;
+          if (useAudio) {
+            const data = analyserDataRef.current!;
+            const freqIdx = Math.min(data.length - 1, Math.floor((i / NUM_WAVEFORM_BARS) * data.length));
+            targetH = gaussian * (8 + 52 * Math.min(1, (data[freqIdx] / 255) * 2.5));
+          } else {
+            targetH = 20 * gaussian;
+          }
+          heights[i] += (targetH - heights[i]) * (isHoveringLiveRef.current ? 0.35 : 0.15);
+          const bar = barRefs.current[i];
+          if (bar) bar.style.height = `${heights[i]}px`;
         }
       }
       animRafRef.current = requestAnimationFrame(animate);
     };
+    if (animRafRef.current) cancelAnimationFrame(animRafRef.current);
     animRafRef.current = requestAnimationFrame(animate);
   };
 
-  const togglePlayback = (artistId: string) => {
-    if (playingArtistId === artistId) {
-      stopPlayback();
-    } else {
-      startPlayback(artistId);
-    }
+  const switchAudio = (src: string, volume = 0.4, live = false) => {
+    const audio = hoverAudioRef.current;
+    if (!audio) return;
+    audioCtxRef.current?.resume();
+    audio.pause();
+    audio.src = encodeURI(src);
+    audio.loop = true;
+    audio.volume = volume;
+    audio.play().catch(() => {});
+    isHoveringLiveRef.current = live;
   };
 
-  const handleStageEnter = (stageId: string) => {
-    if (hoveredStage === stageId) return;
-    setHoveredStage(stageId);
+  const handleTimelineEnter = () => {
+    setInScheduleArea(true);
+    document.dispatchEvent(new Event('ambient-duck'));
+    switchAudio('/sounds/radio.mp3', 0.4, false);
+    startWaveform();
   };
 
-  const handleStageLeave = () => {
-    setHoveredStage(null);
+  const handleHoverPlay = (artistId: string) => {
+    const src = ARTIST_AUDIO[artistId];
+    if (!src) return;
+    switchAudio(src, 0.2, true);
+  };
+
+  const handleHoverEnd = () => {
+    switchAudio('/sounds/radio.mp3', 0.4, false);
+  };
+
+  const handleTimelineLeave = () => {
+    setInScheduleArea(false);
+    isHoveringLiveRef.current = false;
+    stopWaveform();
+    hoverAudioRef.current?.pause();
+    document.dispatchEvent(new Event('ambient-restore'));
   };
 
   useEffect(() => {
-    const onMove = (e: MouseEvent) => setMousePos({ x: e.clientX, y: e.clientY });
+    const onMove = (e: MouseEvent) => {
+      const pos = { x: e.clientX, y: e.clientY };
+      setMousePos(pos);
+      mousePosRef.current = pos;
+    };
     window.addEventListener('mousemove', onMove);
     return () => window.removeEventListener('mousemove', onMove);
   }, []);
 
-  const detectStageFromY = (relY: number): string | null => {
-    for (let i = 0; i < stages.length; i++) {
-      const rowTop = i * STAGE_ROW_HEIGHT + topPad;
-      if (relY >= rowTop && relY < rowTop + STAGE_ROW_HEIGHT) return stages[i].id;
-    }
-    return null;
-  };
-
-  const handleContentMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    const relY = e.clientY - e.currentTarget.getBoundingClientRect().top;
-    const detected = detectStageFromY(relY);
-    if (detected !== hoveredStage) {
-      if (detected) handleStageEnter(detected);
-      else handleStageLeave();
-    }
-  };
-
-  const handleContentMouseLeave = () => {
-    setInScheduleArea(false);
-    handleStageLeave();
-  };
+  useEffect(() => {
+    return () => {
+      if (animRafRef.current) cancelAnimationFrame(animRafRef.current);
+      hoverAudioRef.current?.pause();
+      audioCtxRef.current?.close().catch(() => {});
+    };
+  }, []);
 
   // On mount, jump timeline to live position (Saturday is default)
   useEffect(() => {
@@ -323,10 +365,8 @@ export default function SchedulePage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // On date switch: stop audio, reset scroll to start then jump to live/start
+  // On date switch: reset scroll to start then jump to live/start
   useEffect(() => {
-    stopPlayback();
-    setHoveredStage(null);
     if (activeDate === 'sat') {
       scrollToLive();
     } else {
@@ -335,125 +375,83 @@ export default function SchedulePage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeDate]);
 
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      if (animRafRef.current) cancelAnimationFrame(animRafRef.current);
-      if (audioRef.current) audioRef.current.pause();
-      if (audioCtxRef.current) audioCtxRef.current.close().catch(() => {});
-    };
-  }, []);
-
   return (
     <main
-      className="flex flex-col flex-1 overflow-hidden relative"
-      style={{
-        backgroundImage: "url('/schedule-background.png')",
-        backgroundSize: 'cover',
-        backgroundPosition: 'center 30%',
-      }}
+      className="flex flex-col flex-1 overflow-hidden relative cursor-none"
+      style={{ backgroundImage: "url('/schedule-background.png')", backgroundSize: 'cover', backgroundPosition: 'center 30%' }}
     >
-      {/* Cursor cue */}
-      {inScheduleArea && !hoveredStage && (
+      {/* 24×24 black rectangle cursor — always follows mouse */}
+      <div
+        className="fixed pointer-events-none z-50"
+        style={{
+          left: mousePos.x,
+          top: mousePos.y,
+          width: 24,
+          height: 24,
+          backgroundColor: '#000000',
+          transform: 'translate(-50%, -50%)',
+        }}
+      />
+
+      {/* Vertical line — only in timeline section */}
+      {inScheduleArea && (
         <div
           className="fixed pointer-events-none z-50"
-          style={{ left: mousePos.x, top: mousePos.y - 10, transform: 'translate(-50%, -100%)' }}
-        >
-          <span
-            className="uppercase"
-            style={{
-              fontFamily: 'var(--font-ui)',
-              fontSize: '10px',
-              letterSpacing: '0.05em',
-              color: 'rgba(80,80,80,0.8)',
-            }}
-          >
-            [HEAR WHO&apos;S PLAYING]
-          </span>
-        </div>
+          style={{
+            left: mousePos.x,
+            top: timelineBounds.top,
+            width: 1,
+            height: timelineBounds.height,
+            backgroundColor: '#000000',
+          }}
+        />
       )}
 
       {/* Timeline — heavy white overlay keeps image faint, attention on content */}
       <div
         ref={timelineSectionRef}
         className="relative flex flex-1 overflow-hidden"
-        onMouseMove={handleContentMouseMove}
-        onMouseEnter={() => setInScheduleArea(true)}
-        onMouseLeave={handleContentMouseLeave}
+        onMouseEnter={handleTimelineEnter}
+        onMouseLeave={handleTimelineLeave}
+        style={{ backgroundColor: '#ffffff' }}
       >
-        <div className="absolute inset-0 pointer-events-none z-0" style={{ backgroundColor: 'rgba(255,255,255,0.88)' }} />
 
-        {/* Sticky stage labels */}
-        <div className="flex-shrink-0 w-[158px] relative z-10">
+        {/* Sticky stage labels — overlaid on top of full-width timeline */}
+        <div className="absolute left-0 top-0 bottom-0 w-[158px] z-20 pointer-events-none">
           {stages.map((stage, stageIdx) => {
-            const top = stageIdx * STAGE_ROW_HEIGHT + topPad + 8;
+            const top = stageIdx * STAGE_ROW_HEIGHT + topPad + 4;
             return (
               <div
                 key={stage.id}
-                className="absolute left-[12px]"
+                className="absolute left-[24px]"
                 style={{ top }}
               >
                 <div className="relative pt-[4px] pb-[5px]" style={{ paddingLeft: '9px', paddingRight: '6px' }}>
                   <div
-                    className="absolute left-0 top-[4px] w-[3px]"
-                    style={{
-                      backgroundColor: STAGE_COLORS[stage.id],
-                      height: '38px',
-                    }}
+                    className="absolute left-0 w-[3px]"
+                    style={{ backgroundColor: '#FF0000', top: '4px', bottom: '5px' }}
                   />
-                  <div className="flex flex-col gap-[1px]">
-                    <span
-                      className="uppercase"
-                      style={{
-                        fontFamily: 'var(--font-display)',
-                        fontSize: '13px',
-                        fontWeight: 600,
-                        letterSpacing: '0.04em',
-                        color: STAGE_COLORS[stage.id],
-                      }}
-                    >
-                      {stage.label}
-                    </span>
-                    <span
-                      className="uppercase"
-                      style={{
-                        fontFamily: 'var(--font-display)',
-                        fontSize: '20px',
-                        fontWeight: 600,
-                        lineHeight: 1.1,
-                        color: '#111111',
-                      }}
-                    >
-                      {stage.name}
-                    </span>
-                  </div>
+                  <span
+                    className="uppercase whitespace-nowrap"
+                    style={{
+                      fontFamily: 'var(--font-display)',
+                      fontSize: '20px',
+                      fontWeight: 600,
+                      lineHeight: 1.1,
+                      color: '#111111',
+                    }}
+                  >
+                    {stage.name}
+                  </span>
                 </div>
               </div>
             );
           })}
         </div>
 
-        {/* Scrollable timeline — scrollbar hidden */}
-        <div ref={scrollRef} className="no-scrollbar flex-1 overflow-x-auto overflow-y-hidden relative px-[24px] z-10">
+        {/* Scrollable timeline — full width */}
+        <div ref={scrollRef} className="no-scrollbar absolute inset-0 overflow-x-auto overflow-y-hidden px-[24px] z-10">
           <div className="relative h-full" style={{ minWidth: 2140 }}>
-
-            {/* Colored bands — invisible by default, fade in on stage hover */}
-            {stages.map((stage, stageIdx) => {
-              const rowTop = stageIdx * STAGE_ROW_HEIGHT + topPad;
-              return (
-                <div
-                  key={`band-${stage.id}`}
-                  className="absolute left-0 right-0 pointer-events-none"
-                  style={{
-                    top: rowTop + ARTIST_OFFSET - 4,
-                    height: 58,
-                    backgroundColor: STAGE_COLORS[stage.id],
-                    opacity: hoveredStage === stage.id ? 0.22 : 0,
-                    transition: 'opacity 0.2s ease',
-                  }}
-                />
-              );
-            })}
 
             {/* Artist markers */}
             {stages.map((stage, stageIdx) => {
@@ -468,19 +466,15 @@ export default function SchedulePage() {
                   <ArtistLabel
                     artist={artist}
                     muted={activeDate === 'sat' && parseToMinutes(artist.endTime ?? artist.time) <= LIVE_MINUTES}
-                    isPlaying={playingArtistId === artist.id}
-                    onPlay={() => togglePlayback(artist.id)}
+                    lineBreakAfter={artist.id === 'dollkraut-band' ? 'DOLLKRAUT' : undefined}
+                    onHoverStart={LIVE_IDS.has(artist.id) ? () => handleHoverPlay(artist.id) : undefined}
+                    onHoverEnd={LIVE_IDS.has(artist.id) ? handleHoverEnd : undefined}
                   />
                 </div>
               ));
             })}
 
-            {activeDate === 'sat' && (
-              <LiveIndicator
-                isPlaying={playingArtistId !== null}
-                barRefs={barRefs}
-              />
-            )}
+            {activeDate === 'sat' && <LiveIndicator />}
 
             {/* Hour columns */}
             {HOURS.map((hour, i) => {
@@ -510,6 +504,22 @@ export default function SchedulePage() {
 
             <div className="absolute left-0 right-0 h-px bg-black/20" style={{ bottom: RULE_BOTTOM }} />
 
+            {/* Cursor-reactive waveform — lives inside scrollable content so it scrolls with timeline */}
+            {inScheduleArea && (
+              <div
+                className="absolute left-0 right-0 pointer-events-none flex justify-between items-end"
+                style={{ bottom: RULE_BOTTOM, height: 52, zIndex: 25 }}
+              >
+                {Array.from({ length: NUM_WAVEFORM_BARS }, (_, i) => (
+                  <div
+                    key={i}
+                    ref={el => { barRefs.current[i] = el; }}
+                    style={{ width: 2, height: 0, backgroundColor: '#FF0000' }}
+                  />
+                ))}
+              </div>
+            )}
+
             {/* 15-minute tick marks */}
             {Array.from({ length: TOTAL_HOURS * 4 }, (_, i) => {
               if (i % 4 === 0) return null;
@@ -533,30 +543,15 @@ export default function SchedulePage() {
         </div>
       </div>
 
-      {/* Bottom bar — own background image cropped to the crowd scene */}
+      {/* Bottom bar */}
       <div
-        className="relative z-10 flex items-end px-[24px] pb-[16px] gap-[40px] h-[25vh] flex-shrink-0 border-t border-white/20"
-        style={{
-          backgroundImage: "url('/schedule-background.png')",
-          backgroundSize: 'cover',
-          backgroundPosition: 'center 75%',
-        }}
+        className="relative z-10 flex items-end px-[24px] pb-[24px] gap-[40px] h-[25vh] flex-shrink-0 border-t border-white/20"
+        style={{ backgroundImage: "url('/schedule-background.png')", backgroundSize: 'cover', backgroundPosition: 'center 75%' }}
       >
-        <h1
-          className="uppercase"
-          style={{
-            fontFamily: 'var(--font-display)',
-            fontSize: '80px',
-            lineHeight: '0.855',
-            fontWeight: 600,
-            color: '#ffffff',
-          }}
-        >
-          SCHEDULE
-        </h1>
+        <StippleText text="SCHEDULE" dotColor="#FF0000" canvasWidth={700} align="left" anchorBottom style={{ position: 'absolute', left: 24, bottom: 24, maxWidth: 480, height: 'auto' }} />
         <div className="ml-auto flex flex-col items-end justify-end gap-[2px]">
           <button
-            onClick={() => setActiveDate('sat')}
+            onClick={() => { playClickSound(); setActiveDate('sat'); }}
             className="uppercase cursor-pointer transition-all duration-200"
             style={{
               fontFamily: 'var(--font-display)',
@@ -569,7 +564,7 @@ export default function SchedulePage() {
             SAT 6.23
           </button>
           <button
-            onClick={() => setActiveDate('sun')}
+            onClick={() => { playClickSound(); setActiveDate('sun'); }}
             className="uppercase cursor-pointer transition-all duration-200"
             style={{
               fontFamily: 'var(--font-display)',

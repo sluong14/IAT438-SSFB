@@ -24,7 +24,7 @@ function wrapLines(ctx: CanvasRenderingContext2D, text: string, maxWidth: number
   return lines;
 }
 
-export default function StippleText({ text, dotColor = '#000000', canvasWidth = CANVAS_W, style }: { text: string; dotColor?: string; canvasWidth?: number; style?: React.CSSProperties }) {
+export default function StippleText({ text, dotColor = '#000000', canvasWidth = CANVAS_W, align = 'center', anchorBottom = false, style }: { text: string; dotColor?: string; canvasWidth?: number; align?: 'left' | 'center'; anchorBottom?: boolean; style?: React.CSSProperties }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -55,11 +55,15 @@ export default function StippleText({ text, dotColor = '#000000', canvasWidth = 
       off.fillRect(0, 0, canvasWidth, CANVAS_H);
       off.font = font;
       off.letterSpacing = `${-0.02 * fontSize}px`;
-      off.textAlign = 'center';
-      off.textBaseline = 'middle';
+      off.textAlign = align;
+      off.textBaseline = anchorBottom ? 'alphabetic' : 'middle';
       off.fillStyle = '#000000';
+      const textX = align === 'left' ? 0 : canvasWidth / 2;
       lines.forEach((line, i) => {
-        off.fillText(line, canvasWidth / 2, LINE_H / 2 + LINE_GAP * i);
+        const lineY = anchorBottom
+          ? (CANVAS_H - 5) - LINE_GAP * (lines.length - 1 - i)
+          : LINE_H / 2 + LINE_GAP * i;
+        off.fillText(line, textX, lineY);
       });
 
       ctx.clearRect(0, 0, canvasWidth, CANVAS_H);
@@ -77,7 +81,7 @@ export default function StippleText({ text, dotColor = '#000000', canvasWidth = 
     };
 
     document.fonts.ready.then(render);
-  }, [text, canvasWidth]);
+  }, [text, canvasWidth, align, anchorBottom]);
 
   return (
     <canvas

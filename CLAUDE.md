@@ -61,9 +61,19 @@ Vinyl disc UI with rotating wheel, audio player, EQ knobs, tempo slider, sound f
 **This page was rewritten by a teammate using a `WhipMixer` component — that version was intentionally reverted in favour of the vinyl disc implementation.** If you pull a commit that restores `WhipMixer`, you will need to revert `app/stage/[stageId]/[artistId]/page.tsx` back to the vinyl disc version manually.
 
 ### `/schedule` — Schedule (`app/schedule/page.tsx`)
-Horizontal scrollable timeline. Artist positions are computed with `timeToPercent(artist.time)` which parses our `'SAT HH:MM–HH:MM'` format. The waveform animation at the 18:00 LIVE marker is driven by Web Audio analyser data when a playable artist is clicked.
+Horizontal scrollable timeline. Artist positions are computed with `timeToPercent(artist.time)` which parses our `'SAT HH:MM–HH:MM'` format.
 
-**Playable artists** (click-to-play on schedule): `nihiloxica`, `vladimir-ivkovic-1`, `alessandro-adriani-the-hacker`. Audio files are in `/public/audio/` with capitalised names (`Nihiloxica.mp3`, `Vladimir.mp3`, `Alessandro.mp3`).
+**Waveform**: 400 bars span the full 2140px scrollable content width, invisible except near the cursor (Gaussian bell curve). When hovering a live artist, bars pulse with Web Audio analyser data. Radio plays at 0.2 volume on timeline enter (ambient ducks); live artist hover plays the artist track at 0.2 volume; leaving a live artist resumes the radio.
+
+**On load (Saturday)**: timeline scrolls to horizontally center the 18:30 LIVE marker. Switching back to Saturday also re-centers it. Switching to Sunday scrolls to the start.
+
+**SAT / SUN date buttons** play a click sound via `playClickSound` on click.
+
+**`LIVE_IDS`** — controls which artists trigger audio hover + audio-reactive waveform: `nihiloxica`, `vladimir-ivkovic-2` (18:30 slot only — not `-1`), `alessandro-adriani-the-hacker`.
+
+**`ArtistLabel`** accepts a `lineBreakAfter` prop (word string) to force a line break mid-name. Currently used for `dollkraut-band` to break after "DOLLKRAUT" so "BAND" drops to a second line.
+
+**Playable audio files** (hover-to-play on schedule): `/public/audio/Nihiloxica.mp3`, `/public/audio/Vladimir.mp3`, `/public/audio/Alessandro.mp3`. Radio ambient: `/public/sounds/radio.mp3`.
 
 ---
 
@@ -72,7 +82,7 @@ Horizontal scrollable timeline. Artist positions are computed with `timeToPercen
 | Component | Purpose |
 |---|---|
 | `StageScene` | Three.js card grid — used only on the stage page |
-| `StippleText` | Canvas halftone renderer — renders text as stipple dots. Used for stage name hero and setlist artist name. Accepts `canvasWidth` (default 1400; use ~900 for narrower contexts), `dotColor`, `style` props. |
+| `StippleText` | Canvas halftone renderer — renders text as stipple dots. Used for stage name hero, setlist artist name, and schedule footer. Props: `canvasWidth` (default 1400; use ~900 for narrower contexts), `dotColor`, `align` (`'center'` default or `'left'`), `anchorBottom` (draws text at canvas bottom edge — use when absolutely positioning with `bottom: N`), `style`. |
 | `GrainOverlay` | Animated canvas grain on top of every page (rendered in `layout.tsx`) |
 | `AmbientPlayer` | Background ambient audio that ducks when track plays |
 | `NavStrip` | Bottom navigation strip on stage + setlist pages. Shows LIVE NOW banner in both modes when `liveInfo` is passed. |
@@ -104,6 +114,8 @@ Renders text as a halftone dot canvas using the stipple algorithm from `utils/st
 - Multi-line wrapping is handled automatically: `wrapLines()` measures word widths and splits at `canvasWidth * 0.92`.
 - `LINE_H = 220` sets the native font size height. `LINE_GAP = 130` sets the tighter line step for wrapped lines.
 - **`canvasWidth`** (default `1400`) controls native canvas width. Use `900` on the setlist page for a bigger-looking font at narrower CSS display widths.
+- **`align`** (`'center'` default or `'left'`): sets `textAlign` on the offscreen canvas. Use `'left'` when you want text to start at the left edge of the canvas (no internal whitespace on the left).
+- **`anchorBottom`** (boolean, default `false`): draws text with `textBaseline = 'alphabetic'` at `CANVAS_H - 5`, leaving only ~5px of transparent space at the canvas bottom. Use this when absolutely positioning with `bottom: N` so the visible text sits at exactly `N`px from its container bottom (the schedule footer uses this).
 - The stipple algorithm lives in `ssfb-microsite/utils/stipple.ts` — a copy of the root-level `lib/stipple.ts` (kept separate since ssfb-microsite is its own Next.js app).
 
 To adjust the stipple appearance, change the params passed to `drawStipple` inside the component's render function.
