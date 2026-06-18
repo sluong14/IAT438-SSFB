@@ -1,5 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Azeret+Mono:ital,wght@0,400;0,600;1,400&display=swap');
 @import "tailwindcss";
+@import "leaflet/dist/leaflet.css";
 
 *, *::before, *::after { cursor: none !important; }
 
@@ -117,4 +118,15 @@ a {
 @keyframes card-appear {
   from { opacity: 0; transform: scale(0.97); }
   to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes explore-marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+@keyframes nav-highlight-sweep {
+  0%   { clip-path: inset(0 100% 0 0); background-color: #000; }
+  65%  { clip-path: inset(0 0%   0 0); background-color: #000; }
+  100% { clip-path: inset(0 0%   0 0); background-color: #FF0000; }
 }
